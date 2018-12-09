@@ -1,6 +1,8 @@
 import React, {Component, Fragment} from 'react';
 import Burger from "../../../components/Burger/Burger";
 import BuildControls from "../../Burger/BuildControls/BuildControls";
+import Modal from '../../UI/Modal/Modal';
+import OrderSummary from "../../Burger/OrderSummary/OrderSummary";
 
 const INGREDIENT_PRICES = {
   salad: 0.5,
@@ -8,6 +10,7 @@ const INGREDIENT_PRICES = {
   meat: 1.3,
   bacon: 0.7
 }
+
 class BurgerBuilder extends Component {
 
   state = {
@@ -17,7 +20,22 @@ class BurgerBuilder extends Component {
       cheese: 0,
       meat: 0
     },
-    totalPrice: 4 // the base price
+    totalPrice: 4, // the base price
+    purchasable: false,
+    purchasing: false
+  }
+
+  updatePurchaseState = (ingredients) => {
+    const sum = Object.keys(ingredients)
+        .map(igKey => {
+          return ingredients[igKey];
+        })
+        .reduce((total, currAmount) => {
+          return total + currAmount;
+        }, 0)
+    this.setState({
+      purchasable: sum > 0
+    })
   }
 
   addIngredientHandler = (type) => {
@@ -29,25 +47,43 @@ class BurgerBuilder extends Component {
       totalPrice: newPrice,
       ingredients: updatedIngredients
     })
+    this.updatePurchaseState(updatedIngredients);
   }
 
   removeIngredientHandler = (type) => {
     if (this.state.ingredients[type] !== 0) {
       const newPrice = this.state.totalPrice - INGREDIENT_PRICES[type];
       const updatedIngredients = {
-          ...this.state.ingredients,
+        ...this.state.ingredients,
         [type]: this.state.ingredients[type] - 1
       }
       this.setState({
         totalPrice: newPrice,
         ingredients: updatedIngredients
       })
+      this.updatePurchaseState(updatedIngredients);
     }
+  }
+
+  purchaseHandler = () => {
+    this.setState({
+      purchasing: true
+    })
+  }
+
+  purchaseCancelHandler = () => {
+    this.setState({
+      purchasing: false
+    })
+  }
+
+  purchaseContinueHandler = () => {
+    alert('You continue!') // just for now
   }
 
   render() {
     const disabledInfo = {
-        ...this.state.ingredients
+      ...this.state.ingredients
     }
 
     for (let key in disabledInfo) {
@@ -56,10 +92,19 @@ class BurgerBuilder extends Component {
 
     return (
         <Fragment>
-          <Burger ingredients={this.state.ingredients} />
+          <Modal show={this.state.purchasing} modalClosed={this.purchaseCancelHandler}>
+            <OrderSummary
+                ingredients={this.state.ingredients}
+                price={this.state.totalPrice}
+                purchaseCancelled={this.purchaseCancelHandler}
+                purchaseContinued={this.purchaseContinueHandler}/>
+          </Modal>
+          <Burger ingredients={this.state.ingredients}/>
           <BuildControls ingredientAdded={this.addIngredientHandler}
                          ingredientRemoved={this.removeIngredientHandler}
                          disabled={disabledInfo}
+                         purchasable={this.state.purchasable}
+                         ordered={this.purchaseHandler}
                          price={this.state.totalPrice}/>
         </Fragment>
     );
