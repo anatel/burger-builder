@@ -49,7 +49,8 @@ class ContactData extends Component {
                 validation: {
                     required: true,
                     minLength: 5,
-                    maxLength: 5
+                    maxLength: 5,
+                    isNumeric: true
                 },
                 valid: false,
                 touched: false
@@ -76,6 +77,7 @@ class ContactData extends Component {
                 value: '',
                 validation: {
                     required: true,
+                    isEmail: true
                 },
                 valid: false,
                 touched: false
@@ -93,7 +95,7 @@ class ContactData extends Component {
             }
         },
         formIsValid: false
-    }
+    };
 
     checkValidity = (value, rules={}) => {
         let isValid = true;
@@ -110,8 +112,18 @@ class ContactData extends Component {
             isValid &= value.length <= rules.maxLength;
         }
 
+        if (rules.isEmail) {
+            const pattern = /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+            isValid &= pattern.test(value);
+        }
+
+        if (rules.isNumeric) {
+            const pattern = /^\d+$/;
+            isValid &= pattern.test(value);
+        }
+
         return isValid;
-    }
+    };
 
     orderHandler = (event) => {
         // preventDefault because I don't want to send the request automatically,
@@ -127,9 +139,10 @@ class ContactData extends Component {
             ingredients: this.props.ings,
             price: this.props.price, //this should be calculated on the server in prod
             orderData: formData,
+            userId: this.props.userId
         };
 
-        this.props.orderBurger(order);
+        this.props.orderBurger(order, this.props.token);
     };
 
     inputChangedHandler = (event, inputIdentifier) => {
@@ -203,13 +216,15 @@ const mapStateToProps = state => {
     return {
         ings: state.burgerBuilder.ingredients,
         price: state.burgerBuilder.totalPrice,
-        loading: state.order.loading
+        loading: state.order.loading,
+        token: state.auth.token,
+        userId: state.auth.userId
     }
 };
 
 const mapDispatchToProps = dispatch => {
     return {
-        orderBurger: (orderData) => dispatch(purchaseBurger(orderData))
+        orderBurger: (orderData, token) => dispatch(purchaseBurger(orderData, token))
     }
 };
 

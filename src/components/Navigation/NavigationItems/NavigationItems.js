@@ -3,10 +3,13 @@ import NavigationItem from './NavigationItem/NavigationItem';
 import classes from './NavigationItems.less';
 
 const navigationItems = (props) => (
-  <ul className={classes.NavigationItems}>
-    <NavigationItem link="/" exact>Burger Builder</NavigationItem>
-    <NavigationItem link="/orders">Orders</NavigationItem>
-  </ul>
+    <ul className={classes.NavigationItems}>
+        <NavigationItem link="/" exact>Burger Builder</NavigationItem>
+        {props.isAuthenticated && <NavigationItem link="/orders">Orders</NavigationItem>}
+        {props.isAuthenticated
+            ? <NavigationItem link="/logout">Logout</NavigationItem>
+            : <NavigationItem link="/auth">Authenticate</NavigationItem>}
+    </ul>
 );
 
 export default navigationItems;
